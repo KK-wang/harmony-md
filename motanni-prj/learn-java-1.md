@@ -407,7 +407,7 @@ public UserModel login(@RequestParam(value = "name", required = false) String ac
 
 - code：数字，例如 400。
 - message：信息，例如 “请求参数没填好”。
-- response：抛出异常的类。
+- response：响应，如果为错误则为抛出异常的类。
 
 一个代码示例如下：
 
@@ -421,6 +421,60 @@ public UserModel login(@RequestParam(value = "name", required = false) String ac
 })
 public JsonResult update(@PathVariable String id, UserModel model){}
 ```
+
+## 4.DTO、DAO 与 POJO
+
+下面以 Java 语言为例，给出 DTO、DAO 与 POJO 的示例：
+
+DTO 示例：
+
+```java
+public class UserDTO {
+    private String username;
+    private String email;
+    // ... 其他属性
+    
+    // 构造函数、Getter 和 Setter 方法
+}
+```
+
+DAO 示例：
+
+```java
+public interface UserDao {
+    void save(User user);
+    User findById(int userId);
+    List<User> findAll();
+    void update(User user);
+    void delete(int userId);
+}
+```
+
+```java
+public class UserDaoImpl implements UserDao {
+    // 实现数据库访问逻辑，例如使用 JDBC 进行数据库操作
+    // ...
+}
+```
+
+POJO 示例：
+
+```java
+public class User {
+    private int id;
+    private String username;
+    private String password;
+    // ... 其他属性
+    
+    // 构造函数、Getter 和 Setter 方法
+}
+```
+
+## 5.什么是 Kubernetes 中的 Deployment
+
+Deployment 是 Kubernetes 中用于管理应用程序部署的重要资源对象。它提供了声明式部署、滚动更新、自愈能力和动态调整副本数等功能，帮助开发人员更方便地管理和控制他们的应用程序在 Kubernetes 集群中的运行状态。
+
+在 motanni 项目中，Deployment 被视为一个应用单元。一个 Deployment 可以管理多个 Pod，这些 Pod 通常具有相同的容器镜像，但在滚动更新过程中，可以逐步替换副本中的镜像以实现应用程序的更新。
 
 
 
