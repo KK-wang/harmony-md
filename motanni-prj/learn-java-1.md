@@ -2,8 +2,27 @@
 
 ## 1.使用 Maven 命令将 JAR 文件安装到本地 Maven 仓库
 
+如果我们无法从中央仓库下载一个依赖，但是已经拿到了它的 JAR 包，我们可以将它手动导入（或者说安装）到 Maven 项目中。下面是一些步骤可以帮助你完成这个过程：
 
+1. 在我们的 Maven 项目中创建一个名为 lib（或者其他名称）的目录，用于存放第三方 JAR 文件。
 
+2. 将我们获得的 JAR 文件复制到 lib 目录中。
+
+3. 打开命令行终端，进入到我们的项目根目录。
+
+4. 运行以下 Maven 命令将该 JAR 文件安装到本地 Maven 仓库：
+
+```bash
+mvn install:install-file -Dfile=lib/your-jar-file.jar -DgroupId=com.example -DartifactId=your-artifact-id -Dversion=1.0 -Dpackaging=jar
+```
+
+5. 替换 your-jar-file.jar、com.example、your-artifact-id 和 1.0 为我们实际的值。这个命令会将 JAR 文件安装到本地 Maven 仓库中，使其可在项目中使用。
+
+6. 保存并关闭 pom.xml 文件。
+
+现在，Maven 将能够从本地仓库加载该 JAR 文件并将其包含在项目构建中。确保我们可以成功编译和运行项目，并且能够使用该依赖的功能。
+
+需要注意的是，这种方式只适用于将无法从中央仓库下载的特定依赖添加到项目中。如果有可能，最好还是尽量从官方或信任的仓库获取依赖。
 
 
 ## 2.常用注解介绍
@@ -475,6 +494,24 @@ public class User {
 Deployment 是 Kubernetes 中用于管理应用程序部署的重要资源对象。它提供了声明式部署、滚动更新、自愈能力和动态调整副本数等功能，帮助开发人员更方便地管理和控制他们的应用程序在 Kubernetes 集群中的运行状态。
 
 在 motanni 项目中，Deployment 被视为一个应用单元。一个 Deployment 可以管理多个 Pod，这些 Pod 通常具有相同的容器镜像，但在滚动更新过程中，可以逐步替换副本中的镜像以实现应用程序的更新。
+
+> Kubernetes 中的应用一般指代 Deployment。
+
+## 6.kubernetes 中的 admin.conf 是什么?
+
+在 Kubernetes（K8s）应用中，`admin.conf` 是一个配置文件，它包含了管理员权限的配置信息。该文件通常用于控制和管理 Kubernetes 集群。
+
+`admin.conf` 文件是用于访问 Kubernetes API Server 的身份验证凭据和配置信息的一部分。它包含了与集群通信所需的参数，例如 API Server 的地址、证书以及其他安全设置。
+
+通过 `admin.conf` 文件，管理员可以使用命令行工具（如 `kubectl`）或其他客户端工具与 Kubernetes 集群进行交互，并执行管理操作，如创建、修改或删除资源对象（如 Pod、Service、Deployment 等）。
+
+通常情况下，`admin.conf` 文件由 Kubernetes 管理员生成，并分发给有权访问和管理集群的用户。这个文件需要保密，因为它包含了敏感的安全凭据和配置信息，只应该提供给受信任的用户和系统。
+
+请注意，具体的 `admin.conf` 文件路径和内容可能会因不同的 Kubernetes 发行版或部署方式而有所不同。
+
+> k8s 版本要和 client 版本匹配（真是蛋疼。
+
+
 
 
 
