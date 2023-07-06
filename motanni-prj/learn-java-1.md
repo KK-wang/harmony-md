@@ -24,6 +24,12 @@ mvn install:install-file -Dfile=lib/your-jar-file.jar -DgroupId=com.example -Dar
 
 需要注意的是，这种方式只适用于将无法从中央仓库下载的特定依赖添加到项目中。如果有可能，最好还是尽量从官方或信任的仓库获取依赖。
 
+> 例如安装 purejavacomm-0.0.11.jar，如下：
+>
+> ```bash
+> mvn install:install-file -Dfile=lib/purejavacomm-0.0.11.1.jar -DgroupId=org.jetbrains.pty4j -DartifactId=purejavacomm -Dversion=0.0.11.1 -Dpackaging=jar
+> ```
+
 
 ## 2.常用注解介绍
 
@@ -510,6 +516,8 @@ Deployment 是 Kubernetes 中用于管理应用程序部署的重要资源对象
 请注意，具体的 `admin.conf` 文件路径和内容可能会因不同的 Kubernetes 发行版或部署方式而有所不同。
 
 > k8s 版本要和 client 版本匹配（真是蛋疼。
+>
+> **如果新项目基于既有项目进行开发，那么一定要注意不要被既有项目的代码给影响到，适当地注释会很有帮助。**
 
 
 
