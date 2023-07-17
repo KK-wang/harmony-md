@@ -35,6 +35,8 @@ spec:
 
 >在Kubernetes中，每个Pod都有自己的IP地址。如果启动了主机网络模式，那么这个 ip 与其所在节点的IP地址是相同的，它们共享相同的网络命名空间。但是，如果 hostnetwork == false（默认值），那么该IP地址是在Pod创建时由Kubernetes分配的。
 
+注意，当我们启动了主机网络模式，也就是 hostNetwork 设置为 true 时，`spec.template.spec.containers[0].ports[0].containerPort` 必须与 `hostPort` 匹配。
+
 ### 2.1.端口映射
 
 Pod 可以通过端口映射将容器内部的端口映射到外部。在 Kubernetes 中，可以使用 `ports` 字段来定义端口映射。例如，下面的 YAML 配置文件定义了一个 Pod，该 Pod 包含一个名为 `my-container` 的容器，该容器将其内部的 `8080` 端口映射到 Pod 的 `80` 端口。
@@ -136,6 +138,126 @@ Maven 依赖关系遵循最短路径原则：
 ## 6. GitHub 开源项目的 api 文档在哪儿？
 
 除了 README.md 以外，也要关注一下 doc 目录下的 .md 文档。
+
+## 7.如何使用 kubectl 将deployment 部署到指定 label 到 node 上?
+
+要将 Deployment 部署到拥有特定标签的节点上，可以使用 Kubernetes 的 Node Affinity 和 Pod Affinity/Pod Anti-Affinity 特性。具体来说，可以使用 nodeSelector 或 nodeAffinity 来指定 Deployment 中的 Pod 调度到哪些节点上。
+
+首先，在要部署的节点上添加一个标签：
+
+```bash
+$ kubectl label nodes node-1 my-label=my-value
+```
+
+### 7.1.使用 nodeSelector 字段
+
+然后，在 Deployment 的 Pod 模板中指定 `nodeSelector` 字段，以指定应该将 Pod 调度到具有该标签的节点上。例如，以下 Deployment 将 Pod 调度到标签为 `my-label: my-value` 的节点上：
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+      annotations:
+        pod.alpha.kubernetes.io/initialized: "true"
+    spec:
+      nodeSelector:
+        my-label: my-value
+      containers:
+      - name: my-container
+        image: my-image
+        ports:
+        - containerPort: 80
+```
+
+在上面的示例中，我们将标签 `my-label: my-value` 设置为 Pod 的 `nodeSelector`，表示此 Deployment 中的 Pod 将会被调度到拥有该标签的节点上。
+
+### 7.2.使用 nodeAffinity
+
+可以使用 nodeAffinity 更灵活地控制 Pod 的调度，可以为 Pod 指定更复杂的调度规则。nodeAffinity 可以分为两类：requiredDuringSchedulingIgnoredDuringExecution 和 preferredDuringSchedulingIgnoredDuringExecution。前者表示 Pod 必须满足 nodeSelector 规则，后者表示 Pod 更喜欢满足 nodeSelector 规则，但不是必须的。例如，以下 Deployment 将 Pod 调度到拥有标签为 `my-label: my-value` 的节点上：
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+      annotations:
+        pod.alpha.kubernetes.io/initialized: "true"
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: my-label
+                operator: In
+                values:
+                - my-value
+          weight: 1
+      containers:
+      - name: my-container
+        image: my-image
+        ports:
+        - containerPort: 80
+```
+
+在上面的示例中，我们使用 requiredDuringSchedulingIgnoredDuringExecution 类型的 nodeAffinity，指定了一个标签的匹配规则。Pod 只有在节点上匹配了该标签才会被调度。
+
+以上示例中，我们假设节点 `node-1` 上已经设置了标签 `my-label: my-value`。要部署 Deployment，只需使用 `kubectl apply` 命令即可：
+
+```bash
+$ kubectl apply -f deployment.yaml
+```
+
+其中，`deployment.yaml` 是包含 Deployment 规范的 YAML 文件。部署后，Deployment 中的 Pod 将被调度到拥有标签为 `my-label: my-value` 的节点上。
+
+## 8.java setter 与 getter？
+
+在 Java 中，使用 getter 和 setter 方法是一种常见的访问对象属性的方式。如果你遵循 JavaBean 规范的命名规则，即将属性命名为 `xxx`，那么 Java 会自动为该属性生成 `getXxx()` 和 `setXxx()` 方法。
+
+例如，如果你定义了一个名为 `Person` 的类，并定义了一个名为 `name` 的属性，那么 Java 会自动为该属性生成一个 `getName()` 方法和一个 `setName(String name)` 方法：
+
+```java
+public class Person {
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+```
+
+在上面的示例中，`getName()` 方法返回 `name` 属性的值，而 `setName()` 方法将传入的参数赋值给 `name` 属性。
+
+需要注意的是，自动生成的 getter 和 setter 方法的命名是基于属性的名字而来的，因此如果你想使用不同的命名规则，或者你的属性名不符合 JavaBean 规范，那么你需要手动定义 getter 和 setter 方法。
+
+
+
+
+
+
 
 
 
