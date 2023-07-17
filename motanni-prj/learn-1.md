@@ -1,4 +1,4 @@
-# learn-java-1
+# learn-1
 
 ## 1.使用 Maven 命令将 JAR 文件安装到本地 Maven 仓库
 

@@ -1,4 +1,4 @@
-# learn-java-2
+# learn-2
 
 ## 1.pvc、pv 与 pod 申领的 volume 分别是什么？
 
@@ -121,7 +121,7 @@ Maven 依赖关系遵循最短路径原则：
 
 什么是 Kubernetes 的资源呢？如下所示：
 
-![image-20230706144636317](learn-java-2.assets/image-20230706144636317.png)
+![image-20230706144636317](learn-2.assets/image-20230706144636317.png)
 
 而 CRD，全称 CustomResourceDefinition，是一种自定义的Kubernetes资源，在定义 CRD 后，可通过在集群内创建对应 CR(CustomResource) 对有状态应用进行统一管理。CRD 有如下字段：
 
