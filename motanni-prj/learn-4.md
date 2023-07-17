@@ -1,4 +1,4 @@
-# learn-java-4
+# learn-4
 
 ## 1.什么是 stomp，它与 websocket 有什么区别?
 
@@ -85,6 +85,10 @@ system:anonymous 用户身份的权限非常有限，通常只能访问一些公
 需要注意的是，如果 Kubernetes 集群的访问控制（Access Control）机制被正确配置，那么 system:anonymous 用户身份将无法访问任何敏感资源。因此，在生产环境中，应该尽可能避免使用 system:anonymous 用户身份，而是使用有效的身份验证信息来提高安全性。
 
 默认情况下，system:anonymous 没有权限访问 k8s 中的自定义资源（crd）。
+
+## 10.什么是 RBAC 权限模型？
+
+RBAC（Role-Based Access Control）权限模型的概念，即：基于角色的权限控制。通过角色关联用户，角色关联权限的方式间接赋予用户权限。
 
 
 
