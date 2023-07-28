@@ -138,13 +138,134 @@ MyBatis-Plus 在 Mapper 层和 Service 层均设计了 CURD 接口，至于为�
 
 ## 10.Java 8：函数式编程
 
+> 函数式编程就是一种抽象程度很高的编程范式，纯粹的函数式编程语言编写的函数没有变量，因此，任意一个函数，只要输入是确定的，输出就是确定的，**这种纯函数我们称之为没有副作用**。
+>
+> 而允许使用变量的程序设计语言，由于函数内部的变量状态不确定，同样的输入，可能得到不同的输出，因此，这种函数是有副作用的。
+>
+> 函数式编程的一个特点就是，允许把函数本身作为参数传入另一个函数，还允许返回一个函数。
+
+### 10.1.Lambda 基础
+
+Java 的方法分为实例方法以及静态方法，无论是实例方法，还是静态方法，本质上都相当于过程式语言的函数。只不过Java的实例方法隐含地传入了一个`this`变量，即实例方法总是有一个隐含参数`this`。
+
+函数式编程（Functional Programming）是把函数作为基本运算单元，函数可以作为变量，可以接收函数，还可以返回函数。
+
+在Java程序中，我们经常遇到一大堆单方法接口，即一个接口只定义了一个方法：
+
+- Comparator。
+- Runnable。
+- Callable。
+
+以 `Comparator` 为例，我们想要调用 `Arrays.sort()` 时，可以传入一个 `Comparator` 实例，以匿名类方式编写如下：
+
+```java
+String[] array = ...
+Arrays.sort(array, new Comparator<String>() {
+    public int compare(String s1, String s2) {
+        return s1.compareTo(s2);
+    }
+});
+```
+
+上述写法非常繁琐。从Java 8开始，我们可以用Lambda表达式替换单方法接口。改写上述代码如下：
+
+```java
+String[] array = new String[] { "Apple", "Orange", "Banana", "Lemon" };
+Arrays.sort(array, (s1, s2) -> {
+    return s1.compareTo(s2);
+});
+```
+
+观察Lambda表达式的写法，它只需要写出方法定义：
+
+```java
+(s1, s2) -> {
+    return s1.compareTo(s2);
+}
+```
+
+其中，参数是`(s1, s2)`，参数类型可以省略，因为编译器可以自动推断出`String`类型。`-> { ... }`表示方法体，所有代码写在内部即可。Lambda表达式没有`class`定义，因此写法非常简洁。如果只有一行`return xxx`的代码，完全可以用更简单的写法:
+
+```java
+Arrays.sort(array, (s1, s2) -> s1.compareTo(s2));
+```
+
+返回值的类型也是由编译器自动推断的，这里推断出的返回值是`int`，因此，只要返回`int`，编译器就不会报错。
+
+我们把只定义了单方法的接口称之为`FunctionalInterface`，用注解`@FunctionalInterface`标记。例如，`Callable`接口：
+
+```java
+@FunctionalInterface
+public interface Callable<V> {
+    V call() throws Exception;
+}
+```
+
+Comparator 就是 `FunctionalInterface`。 
+
+### 10.2.方法引用
+
+使用Lambda表达式，我们就可以不必编写`FunctionalInterface`接口的实现类，从而简化代码。实际上，除了Lambda表达式，我们还可以直接传入方法引用。例如：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        String[] array = new String[] { "Apple", "Orange", "Banana", "Lemon" };
+        Arrays.sort(array, Main::cmp);
+        System.out.println(String.join(", ", array));
+    }
+
+    static int cmp(String s1, String s2) {
+        return s1.compareTo(s2);
+    }
+}
+```
+
+上述代码在`Arrays.sort()`中直接传入了静态方法`cmp`的引用，用`Main::cmp`表示。因此，所谓方法引用，是指如果某个方法签名和接口恰好一致，就可以直接传入方法引用。因为`Comparator<String>`接口定义的方法是`int compare(String, String)`，和静态方法`int cmp(String, String)`相比，除了方法名外，方法参数一致，返回类型相同，因此，我们说两者的方法签名一致，可以直接把方法名作为Lambda表达式传入。
+
+实例方法也可以被引用，但是使用实例方法做方法引用时，必须要考虑**隐含参数 this** 的存在，否则会出现方法签名不匹配的情况，此处不再详述。
+
+除了可以引用静态方法和实例方法，我们还可以引用构造方法。如果要把一个`List<String>`转换为`List<Person>`，应该怎么办？传统的做法是先定义一个`ArrayList<Person>`，然后用`for`循环填充这个`List`。
+
+```java
+List<String> names = List.of("Bob", "Alice", "Tim");
+List<Person> persons = new ArrayList<>();
+for (String name : names) {
+    persons.add(new Person(name));
+}
+```
+
+要更简单地实现`String`到`Person`的转换，我们可以引用`Person`的构造方法：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        List<String> names = List.of("Bob", "Alice", "Tim");
+        List<Person> persons = names.stream().map(Person::new).collect(Collectors.toList());
+    }
+}
+class Person {
+    String name;
+    public Person(String name) {
+        this.name = name;
+    }
+}
+```
+
+后面我们会讲到`Stream`的`map()`方法。现在我们看到，这里的`map()`需要传入的FunctionalInterface的定义是：
+
+```java
+@FunctionalInterface
+public interface Function<T, R> {
+    R apply(T t);
+}
+```
+
+把泛型对应上就是方法签名`Person apply(String)`，即传入参数`String`，返回类型`Person`。而`Person`类的构造方法恰好满足这个条件，因为构造方法的参数是`String`，而构造方法虽然没有`return`语句，但它会隐式地返回`this`实例，类型就是`Person`，因此，此处可以引用构造方法。构造方法的引用写法是`类名::new`，因此，此处传入`Person::new`。
 
 
 
 
-## 11.Java 8：接口默认方法
 
 
-
-（下）：26
 
