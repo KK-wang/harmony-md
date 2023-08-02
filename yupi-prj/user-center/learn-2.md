@@ -387,23 +387,101 @@ Spring MVC -> SpringBoot：
 
 > 可以跳过 SpringMVC 直接学习 SpringBoot 吗：https://www.zhihu.com/question/527283820/answer/2518307760
 
-## 6.多态、动态绑定与 Java 父子类转化
+## 6.继承、多态
 
+### 6.1.protected
 
+子类无法访问父类的 private 的属性或者方法，为此可以把 private 改为 protected。
 
+用保护访问控制符 protected 修饰的类成员可以被三种类所访问：**该类自身、与它在同一个包中的其他类以及在其他包中的该类的子类**。使用 protected 修饰符的主要作用，是允许其他包中它的子类来访问父类的特定属性和方法，否则可以使用默认访问控制符。
 
+### 6.2.向上转型
 
+定义一个父类，可以使用子类将其初始化，以 Person 和 Student 为例，Student 拥有 Person 的全部功能，因此，`Person`类型的变量，如果指向`Student`类型的实例，对它进行操作，是没有问题的。
 
+这种把一个子类类型安全地变为父类类型的赋值，被称为向上转型（upcasting），向上转型实际上是把一个子类型安全地变为更加抽象的父类型。
+
+### 6.3.向下转型
+
+和向上转型相反，如果把一个父类类型强制转型为子类类型，就是向下转型（downcasting）。例如：
+
+```java
+Person p1 = new Student(); // upcasting, ok
+Person p2 = new Person();
+Student s1 = (Student) p1; // ok
+Student s2 = (Student) p2; // runtime error! ClassCastException!
+```
+
+如果测试上面的代码，可以发现：
+
+`Person`类型`p1`实际指向`Student`实例，`Person`类型变量`p2`实际指向`Person`实例。在向下转型的时候，把`p1`转型为`Student`会成功，因为`p1`确实指向`Student`实例，把`p2`转型为`Student`会失败，因为`p2`的实际类型是`Person`，不能把父类变为子类，因为子类功能比父类多，多的功能无法凭空变出来。
+
+因此，向下转型很可能会失败。失败的时候，Java虚拟机会报`ClassCastException`。
+
+为了避免向下转型出错，Java提供了`instanceof`操作符，可以先判断一个实例究竟是不是某种类型：
+
+```java
+Person p = new Person();
+System.out.println(p instanceof Person); // true
+System.out.println(p instanceof Student); // false
+
+Student s = new Student();
+System.out.println(s instanceof Person); // true
+System.out.println(s instanceof Student); // true
+
+Student n = null;
+System.out.println(n instanceof Student); // false
+```
+
+**`instanceof`实际上判断一个变量所指向的实例是否是指定类型，或者这个类型的子类**。如果一个引用变量为`null`，那么对任何`instanceof`的判断都为`false`。
+
+利用`instanceof`，在向下转型前可以先判断：
+
+```java
+Person p = new Student();
+if (p instanceof Student) {
+    // 只有判断成功才会向下转型:
+    Student s = (Student) p; // 一定会成功
+}
+```
+
+### 6.4.多态性
+
+假设有 `Person p = new Student();`，那么在调用 `p.run()` 时，调用的是`Person`还是`Student`的`run()`方法？实际上调用的方法是`Student`的`run()`方法。因此可得出结论：
+
+**Java的实例方法调用是基于运行时的实际类型的动态调用，而非变量的声明类型。**
+
+> 但是在自动补全时是根据声明类型的。
+
+这个非常重要的特性在面向对象编程中称之为多态。针对某个类型的方法调用，其真正执行的方法取决于运行时期实际类型的方法。
+
+> 多态具有一个非常强大的功能，就是允许添加更多类型的子类实现功能扩展，却不需要修改基于父类的代码。
+
+### 6.5.final
+
+继承可以允许子类覆写父类的方法。如果一个父类不允许子类对它的某个方法进行覆写，可以把该方法标记为`final`。用`final`修饰的方法不能被`Override`。
+
+如果一个类不希望任何其他类继承自它，那么可以把这个类本身标记为`final`。用`final`修饰的类不能被继承。
+
+对于一个类的实例字段，同样可以用`final`修饰。用`final`修饰的字段在初始化后不能被修改。
+
+> 可以在构造方法中初始化final字段。
 
 ## 7.拦截器与过滤器的区别
 
+参考文章：https://www.cnblogs.com/chengxy-nds/p/13042013.html。
 
+![1302720-20171220113312912-1094583445](./learn-2.assets/1302720-20171220113312912-1094583445.jpg)
 
+![1302720-20171220112948131-1203788553](./learn-2.assets/1302720-20171220112948131-1203788553.jpg)
 
+## 8.MySQL 的架构
 
+mysql 分为 server 和 client，要和 mysql 交互的话需要启动 client。
 
-
-（下）：26
+> cmd 可以在命令行中使用 exe 文件，git bash 则不行（归根到底还是 win 和类 Unix 的区别）。
+>
+> 
 
 
 
