@@ -144,61 +144,176 @@ Secret，参考文章：https://jimmysong.io/kubernetes-handbook/concepts/secret
 
 ### 5.1.单点登录
 
+单点登录：
 
+* 虚假的单点登录，一级域名相同。
+* 真实的单点登录，一级域名不同。
 
+**一次登录，全线通用**的单点登录：
 
+![image-20230803101548643](./learn-3.assets/image-20230803101548643.png)
 
+>跨域请求本身说的是站点与 API 服务器之间的，这部分我们已经理解，默认请求跨域的情况下，请求不携带 cookie。
+>
+>cookie 跨域则说的是 cookie 和 target 之间的，这里的 target 分为两部分，一是 API 服务器，二是站点。对于 target 是站点的情况，如果 domain 和站点域名不一致，则该 cookie 对该站点不可见（document.cookie 访问不到）。对于 target 是 API 服务器的情况，如果 domain 和服务器的域名不一致，则站点发起对该服务器的请求时，则请求不会携带 cookie（即使该请求不跨域）。
 
+这里的 ticket（token）可以视作 accessToken，而 SSO 凭证则可以视作 refreshToken。
 
+上述单点登录只是简化版本，如果我们要考虑浏览器的场景，那么还会更复杂一点，因为浏览器对跨域有着更加严格的限制，包括 cookie 和 localStorage。
 
+因此需要 A.com 提供 A 域下的 cookie，如下所示，code 是一次性的，暴露在 URL 中，只为了传一下换 ticket，换完就失效。
 
+![image-20230803144315755](./learn-3.assets/image-20230803144315755.png)
 
+## 6.SpringBoot 如何统一后端返回格式
 
-## 6.为什么需要通用的返回对象
+参考文章：https://juejin.cn/post/6986800656950493214。
 
+> 使用同一且通用的返回对象主要是为了方便前端统一处理接口。
 
+统一返回的格式一般由两部分构成：
 
+1. 返回对象。除了包括返回所必须的属性之外，也有 success、error 等可读性比较高的静态方法。
+2. 状态码，不同于 HTTP 状态码，这里的状态码是后端自定义的业务状态码，用于更好地响应给前端错误信息。一般来讲，状态码是一个枚举。
 
+不过，统一后端返回格式的最大弊端就是每一个接口都需要调用 `ResultData.success()`这行代码对结果进行包装。为了对其进行优雅地包装，需要使用 `ResponseBodyAdvice`。
 
+不过，后端除了有正常的返回以外，还有异常，如何做到正常返回和异常的统一呢？
 
+答案是使用全局异常捕获器，此处就不再赘述，可看参考文章。
 
-## 7.为什么需要自定义异常以及全局异常处理
+## 7.为什么需要自定义异常
 
+参考文章：https://juejin.cn/post/7261178697570336826。
 
-
-
+简单地说，自定义异常是为了对异常情况的补充或者细分。例如，将所以的异常统一分解为系统异常（数据库连接失败或者网络断开）和业务异常（密码错误等等）。
 
 ## 8.Java 枚举
 
+参考文章：https://juejin.cn/post/6979533964784435230。
 
+> 一般情况下，在定义业务 code 时可以使用枚举。
 
+枚举 enum 可以定义属性、构造方法及其他方法。枚举可以在内部直接定义枚举项：
 
+```java
+public enum ErrorCode {
+    SUCCESS(0, "ok", ""),
+    PARAMS_ERROR(40000, "请求参数错误", ""),
+    NULL_ERROR(40001, "请求数据为空", ""),
+    NOT_LOGIN(40100, "未登录", ""),
+    NO_AUTH(40101, "无权限", ""),
+    SYSTEM_ERROR(50000, "系统内部异常", "");
+}
+```
 
 ## 9.@RestControllerAdvice 和 @Slf4j 是什么？
 
+### 9.1.@RestControllerAdvice
 
+@RestControllerAdvice 是 Spring 框架中一个用于全局处理异常和返回值的注解。它的作用有二：
 
+* 将一些通用的异常处理逻辑集中到一个类中，使得代码更加清晰简洁，并且避免了重复的异常处理代码。
+* 统一处理包装 Controller 层中方法的返回值。
 
+>在文章 https://juejin.cn/post/6986800656950493214 中讲的很清楚，此处不再赘述。
 
-## 10.MyBatis Plus 中的 IService
+### 9.2.@Slf4j
 
-为什么 Service 接口需要继承 IService？
+首先需要明白的是 `@Slf4j` 来自于包 `lombok.extern.slf4j.Slf4j`，即来自于 lombok。我们在使用 `@Slf4j` 时：
 
-为什么 Service 实现需要继承 ServiceImpl？
+```java
+import lombok.extern.slf4j.Slf4j;
 
-为什么 ServiceImpl 要引入 Mapper 泛型？
+@Slf4j
+public class LogExample {
+}
+```
 
-## 11.kubectl apply 相关命令
+实际上会被编译为：
 
-kubectl delete -f some-config.yaml。
+```java
+public class LogExample {
+	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LogExample.class);
+}
+```
+
+可以在文章中了解什么是 slf4j：https://www.liaoxuefeng.com/wiki/1252599548343744/1264739155914176。
+
+其实 slf4j 类似于Commons Logging，也是一个日志接口，而 logback 类似于 log4j，是一个日志的实现。可以这么说，slf4j 是一个日志接口，而 logback 则是该日志接口的一个实现。
+
+> SpringBoot 项目自定义日志配置，通过编写 classpath:logback.xml 配置文件。
+
+## 10.IService 与 ServiceImpl
+
+MyBatis Plus 默认提供了 Service 层的方法实现，这些方法是 Mapper 层 CRUD 的简单封装。下面给出引入 MyBatis Plus 框架所遇到的三个问题并作一一解答：
+
+**为什么 Service 接口需要继承 IService？**
+
+由于 MyBatis Plus 默认提供了 Service 层的方法实现，所以需要在 Service 接口中给出这些方法的接口定义。正因如此，Service 层接口需要继承 IService。
+
+**为什么 Service 实现需要继承 ServiceImpl？**
+
+基于同样的原因，Service 需要继承 ServiceImpl，因为其中包含着 IService 中定义的方法的实现。
+
+**为什么 ServiceImpl 要引入 Mapper 和 Model？**
+
+查看 ServiceImpl 源码可知，ServiceImpl 中方法的实现还是会用到 Mapper，而这些方法所实现的 CRUD 是不能离开实体类 Model 的。
+
+## 11.kubectl -f 相关命令
+
+更多的 kubectl 命令可以在 kubernetes 官网查阅：https://kubernetes.io/zh-cn/docs/reference/kubectl/cheatsheet/#copy-files-and-directories-to-and-from-containers。
+
+### 11.1.kubectl apply -f
+
+`apply` 通过定义 Kubernetes 资源的文件来管理应用。 它通过运行 `kubectl apply` 在集群中创建和更新资源。 这是在生产中管理 Kubernetes 应用的推荐方法：
+
+```bash
+kubectl apply -f ./pod.json
+```
+
+使用 apply 操作资源时：
+
+1. 如果资源不存在，就创建，相当于 kubectl create。
+2. 如果资源已存在，就更新，相当于 kubectl patch。
+
+### 11.2.kubectl delete -f
+
+`delete` 可以借助 Kubernetes 资源的文件声明式地删除集群中的资源：
+
+```bash
+kubectl delete -f some-config.yaml
+```
 
 这条命令是使用 Kubernetes 命令行工具 `kubectl` 删除一个 Kubernetes 资源对象，该资源对象的定义在文件 `some-config.yaml` 中。
 
-具体来说，`-f` 标志告诉 `kubectl` 从文件中读取资源定义，而 `delete` 命令表示要删除资源。因此，`kubectl delete -f some-config.yaml` 命令会将 `some-config.yaml` 中定义的 Kubernetes 资源删除。
+> 具体来说，`-f` 标志告诉 `kubectl` 从文件中读取资源定义，而 `delete` 命令表示要删除资源。因此，`kubectl delete -f some-config.yaml` 命令会将 `some-config.yaml` 中定义的 Kubernetes 资源删除。
+
+## 12.k8s 资源管理
+
+参考文章：https://www.cnblogs.com/zackstang/p/14433606.html。
 
 
 
-## 12.application.yaml 配置相关
+
+
+
+
+
+
+
+
+## 13.application.yaml 配置相关
+
+
+
+
+
+
+
+## 14.SpringBoot 如何结合 junit 做单元测试
+
+
 
 
 
