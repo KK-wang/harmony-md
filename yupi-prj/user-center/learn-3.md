@@ -289,38 +289,6 @@ kubectl delete -f some-config.yaml
 
 > 具体来说，`-f` 标志告诉 `kubectl` 从文件中读取资源定义，而 `delete` 命令表示要删除资源。因此，`kubectl delete -f some-config.yaml` 命令会将 `some-config.yaml` 中定义的 Kubernetes 资源删除。
 
-## 12.k8s 资源管理
-
-参考文章：https://www.cnblogs.com/zackstang/p/14433606.html。
-
-
-
-
-
-
-
-
-
-
-
-## 13.application.yaml 配置相关
-
-
-
-
-
-
-
-## 14.SpringBoot 如何结合 junit 做单元测试
-
-
-
-
-
-
-
-
-
 # 附录
 
 ## 1.将应用部署到 k8s 上
