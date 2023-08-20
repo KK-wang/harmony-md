@@ -495,37 +495,26 @@ JVM规范定义了几种原子操作，这些原子操作不需要 synchronized 
 - 基本类型（`long`和`double`除外）赋值，例如：`int n = m`。
 - 引用类型赋值，例如：`List<String> list = anotherList`。
 
+> 不可变对象也无需同步，例如 `List.of()` 返回的对象。
 
+但是，如果是多行赋值语句，那么就需要保证是同步操作。例如：
 
+```java
+class Point {
+    int x;
+    int y;
+    public void set(int x, int y) {
+        synchronized(this) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+}
+```
 
+多线程连续写多个变量时，加锁的目的是为了**保证程序逻辑正确**。例如正确的配套 `(x_1, y_1)`，而不是错误配套为 `(x_1, y_2)`。
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+> 各个线程内的局部变量是互相不可见的，是线程自己独有的。
 
 
 
