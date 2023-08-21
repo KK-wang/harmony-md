@@ -2,6 +2,8 @@
 
 ## 1.多线程
 
+### 1.1.同步方法
+
 如果一个类被设计为允许多线程正确访问，我们就说这个类就是“线程安全”的（thread-safe）。Java标准库的`java.lang.StringBuffer`就是线程安全的。
 
 还有一些不变类，例如`String`，`Integer`，`LocalDate`，它们的所有成员变量都是`final`，多线程同时访问时只能读不能写，这些不变类也是线程安全的。
@@ -66,6 +68,33 @@ public class Counter {
     }
 }
 ```
+
+判断方法是否需要同步修饰，需要考虑方法在多线程情景下是否依旧能够正确运行，例如对于以下 get 方法：
+
+```java
+public class Counter {
+    private int first;
+    private int last;
+
+    public Pair get() {
+        Pair p = new Pair();
+        p.first = first;
+        p.last = last;
+        return p;
+    }
+    ...
+}
+```
+
+由于在给变量 p 赋值的过程中可能会出现 first 和 last 值改变的情况，因此需要对 get 方法添加 synchronized 关键词。
+
+### 1.2.死锁
+
+#### 1.2.1.可重入锁
+
+Java 的线程锁是可重入的锁。
+
+
 
 
 
