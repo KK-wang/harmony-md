@@ -569,35 +569,88 @@ public class TaskQueue {
 
 Java的`java.util.concurrent`包除了提供底层锁、并发集合外，还提供了一组原子操作的封装类，它们位于`java.util.concurrent.atomic`包。以 `AtomicInteger` 为例，它提供的主要操作有：
 
-* 
+* 增加值并返回新值：`int addAndGet(int delta)`。
+* 加1后返回新值：`int incrementAndGet()`。
+* 获取当前值：`int get()`。
+* 用CAS方式设置：`int compareAndSet(int expect, int update)`。
 
+Atomic类是通过无锁（lock-free）的方式实现的线程安全（thread-safe）访问。它的主要原理是利用了CAS：Compare and Set。CAS 的原理如下：
 
+在理解上面这段代码之前，我们首先需要知道 compareAndSet 的作用。CAS 有三个操作数，分别是 CAS 的内存值 V、旧的预期值 A、要修改的新值 B，当且仅当预期值 A 和内存值 V 相同时，将内存值 V 修改为 B，否则什么都不做。
 
+如果我们自己通过 CAS 编写 `incrementAndGet()`，如下所示：
 
+```java
+public int incrementAndGet(AtomicInteger var) {
+    int prev, next;
+    do {
+        prev = var.get();
+        next = prev + 1;
+    } while ( ! var.compareAndSet(prev, next));
+    return next;
+}
+```
 
+> 上面的代码中，如果是 `AtomicInteger`的当前值是`prev`，那么就更新为`next`，返回`true`。如果`AtomicInteger`的当前值不是`prev`，就什么也不干，返回`false`。
 
+通过CAS操作并配合`do ... while`循环，即使其他线程修改了`AtomicInteger`的值，最终的结果也是正确的。
 
+此外，我们可以利用`AtomicLong`可以编写一个多线程安全的全局唯一ID生成器：
 
+```java
+class IdGenerator {
+    AtomicLong var = new AtomicLong(0);
+
+    public long getNextId() {
+        return var.incrementAndGet();
+        // 多线程环境下依旧可以保证返回值的唯一性。
+    }
+}
+```
+
+通常情况下，我们并不需要直接用 `do ... while` 循环调用 `compareAndSet` 实现复杂的并发操作，而是用 `incrementAndGet()`这样的封装好的方法，因此，使用起来非常简单。
+
+> 在高度竞争的情况下，还可以使用 Java 8 提供的 `LongAdder` 和 `LongAccumulator`。
+
+使用 `atomic` 提供的原子操作可以简化多线程编程，包括了如下两点：
+
+1. 原子操作实现了无锁的线程安全。
+2. 适用于计数器、累加器等。
 
 ### 1.11.使用线程池
 
+Java 语言内置了多线程支持，启动一个新线程非常方便，但是，创建线程需要操作系统资源（线程资源，栈空间等），频繁创建和销毁大量线程需要消耗大量时间。
 
+如果可以复用一组线程：
 
+![image-20230912171145967](./learn-4.assets/image-20230912171145967.png)
 
+那么我们就可以把很多小任务让一组线程来执行，而不是一个任务对应一个新线程。这种能接收大量小任务并进行分发处理的就是线程池。
 
-### 1.12.使用 Future
+简单地说，线程池内部维护了若干个线程，没有任务的时候，这些线程都处于等待状态。如果有新任务，就分配一个空闲线程执行。**如果所有线程都处于忙碌状态，新任务要么放入队列等待，要么增加一个新线程进行处理**。
 
+Java 标准库提供了`ExecutorService`接口表示线程池，它的典型用法如下：
 
+```java
+// 创建固定大小的线程池:
+ExecutorService executor = Executors.newFixedThreadPool(3);
+// 提交任务:
+executor.submit(task1);
+executor.submit(task2);
+executor.submit(task3);
+executor.submit(task4);
+executor.submit(task5);
+```
 
+因为`ExecutorService`只是接口，Java标准库提供的几个常用实现类有：
 
+* FixedThreadPool：线程数固定的线程池；
+* CachedThreadPool：线程数根据任务动态调整的线程池；
+* SingleThreadExecutor：仅单线程执行的线程池。
 
+**（毕业要紧，后续略）**
 
-
-
-
-
-
-
+### 1.12.（毕业要紧，后续略）
 
 ## 2.k8s deployment、Jenkins 和 gitlab 做 CICD
 
